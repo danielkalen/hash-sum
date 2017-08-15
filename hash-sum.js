@@ -1,36 +1,36 @@
 'use strict';
 
-function pad (hash, len) {
-  while (hash.length < len) {
-    hash = '0' + hash;
+function fold (hash, text) {
+  var chr, len = text.length, i = -1;
+  if (text.length === 0) {
+    return hash;
+  }
+
+  while (++i !== len) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return hash < 0 ? hash * -2 : hash;
+}
+
+
+function foldObject (hash, o, seen) {
+  var keys = Object.keys(o).sort(), len = keys.length, i = -1;
+  
+  while (++i !== len) {
+    hash = hash+foldValue(hash, o[keys[i]], keys[i], seen);
   }
   return hash;
 }
 
-function fold (hash, text) {
-  var i;
-  var chr;
-  var len;
-  if (text.length === 0) {
-    return hash;
-  }
-  for (i = 0, len = text.length; i < len; i++) {
-    chr = text.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
-    hash |= 0;
-  }
-  return hash < 0 ? hash * -2 : hash;
-}
-
-function foldObject (hash, o, seen) {
-  return Object.keys(o).sort().reduce(foldKey, hash);
-  function foldKey (hash, key) {
-    return foldValue(hash, o[key], key, seen);
-  }
-}
-
 function foldValue (input, value, key, seen) {
-  var hash = fold(fold(fold(input, key), toString(value)), typeof value);
+  var type = typeof value,
+      hash = type === 'string' ? 5361 : fold(fold(input,key), toString(value));
+
+  if (hash === 5361) {
+    return fold(hash, value);
+  }
   if (value === null) {
     return fold(hash, 'null');
   }
@@ -38,21 +38,23 @@ function foldValue (input, value, key, seen) {
     return fold(hash, 'undefined');
   }
   if (typeof value === 'object') {
-    if (seen.indexOf(value) !== -1) {
-      return fold(hash, '[Circular]' + key);
+    if (seen) {
+      if (seen.indexOf(value) !== -1) {
+        return fold(hash, '[Circular]' + key);
+      }
+      seen.push(value);
     }
-    seen.push(value);
     return foldObject(hash, value, seen);
   }
-  return fold(hash, value.toString());
+  return fold(hash, ''+value);
 }
 
 function toString (o) {
   return Object.prototype.toString.call(o);
 }
 
-function sum (o) {
-  return pad(foldValue(0, o, '', []).toString(16), 8);
+function sum (o, avoidCircular) {
+  return ''+foldValue(0, o, '', avoidCircular && []);
 }
 
 module.exports = sum;

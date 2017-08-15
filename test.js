@@ -1,6 +1,6 @@
 'use strict';
 
-var _ = require('lodash');
+var uniq = require('lodash.uniq');
 var test = require('tape');
 var sum = require('./');
 
@@ -41,12 +41,12 @@ test('creates unique hashes', function (t) {
   sub({a:{},b:{}});
   sub([]);
   sub(new Date());
-  sub(global, 'global');
-  t.equal(results.length, _.uniq(results).length);
+  sub(global, 'global', true);
+  t.equal(results.length, uniq(results).length);
   t.end();
 
-  function sub (value, name) {
-    var hash = sum(value);
+  function sub (value, name, avoidCircular) {
+    var hash = sum(value, avoidCircular);
     results.push(hash);
     console.log('%s from:', hash, name || value);
   }
