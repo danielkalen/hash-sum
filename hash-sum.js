@@ -48,11 +48,8 @@ function foldValue (input, value, key, seen) {
   if (hash === 5361) {
     return fold(hash, value);
   }
-  if (value === null) {
-    return fold(hash, 'null');
-  }
-  if (value === undefined) {
-    return fold(hash, 'undefined');
+  if (value === undefined || value === null) {
+    return fold(hash, ''+value);
   }
   if (typeof value === 'object') {
     if (seen) {
