@@ -14,9 +14,26 @@ function fold (hash, text) {
   return hash < 0 ? hash * -2 : hash;
 }
 
+function sort (arr) {
+  if (arr.length < 2) {
+    return arr;
+  } else {
+    var pivot = arr[0], less = [], great = [], len = arr.length, i = 0;
+
+    while (++i !== len) {
+      if (arr[i] <= pivot) {
+        less.push(arr[i]);
+      } else {
+        great.push(arr[i]);
+      }
+    }
+    return sort(less).concat(pivot, sort(great));
+  }
+}
+
 
 function foldObject (hash, o, seen) {
-  var keys = Object.keys(o).sort(), len = keys.length, i = -1;
+  var keys = sort(Object.keys(o)), len = keys.length, i = -1;
   
   while (++i !== len) {
     hash = hash+foldValue(hash, o[keys[i]], keys[i], seen);
