@@ -16,7 +16,9 @@
   },
   "main": "hash-sum.js",
   "scripts": {
-    "test": "jshint . && tape test.js"
+    "jshint": "jshint .",
+    "prebulish": "nprm run jshint -s && npm run test -s",
+    "test": "tape test.js"
   },
   "dependencies": {},
   "devDependencies": {

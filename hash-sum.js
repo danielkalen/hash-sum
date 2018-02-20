@@ -1,4 +1,11 @@
 'use strict';
+var EMPTY_STRING_HASH = 5361,
+    EMPTY_STRING = '',
+    CIRCULAR = '[Circular]',
+    OBJECT_TYPE = 'object',
+    STRING_TYPE = 'string',
+    objectToString = Object.prototype.toString;
+
 
 function fold (hash, text) {
   var chr, len = text.length, i = -1;
@@ -42,33 +49,28 @@ function foldObject (hash, o, seen) {
 }
 
 function foldValue (input, value, key, seen) {
-  var type = typeof value,
-      hash = type === 'string' ? 5361 : fold(fold(input,key), toString(value));
+  var hash = typeof value === STRING_TYPE ? EMPTY_STRING_HASH : fold(fold(input,key), objectToString.call(value));
 
-  if (hash === 5361) {
+  if (hash === EMPTY_STRING_HASH) {
     return fold(hash, value);
   }
   if (value === undefined || value === null) {
-    return fold(hash, ''+value);
+    return fold(hash, EMPTY_STRING+value);
   }
-  if (typeof value === 'object') {
+  if (typeof value === OBJECT_TYPE) {
     if (seen) {
       if (seen.indexOf(value) !== -1) {
-        return fold(hash, '[Circular]' + key);
+        return fold(hash, CIRCULAR+key);
       }
       seen.push(value);
     }
     return foldObject(hash, value, seen);
   }
-  return fold(hash, ''+value);
-}
-
-function toString (o) {
-  return Object.prototype.toString.call(o);
+  return fold(hash, EMPTY_STRING+value);
 }
 
 function sum (o, avoidCircular) {
-  return ''+foldValue(0, o, '', avoidCircular && []);
+  return EMPTY_STRING+foldValue(0, o, EMPTY_STRING, avoidCircular && []);
 }
 
 module.exports = sum;
